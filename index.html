@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Retail Analytics Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            500: '#14b8a6',
+                            700: '#0f766e',
+                            900: '#134e4a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            background-image: radial-gradient(circle at top right, #1e293b, #0f172a);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <header class="mb-10 text-center md:text-left flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-400 to-blue-500 mb-2">
+                    Online Retail Dashboard
+                </h1>
+                <p class="text-slate-400">실시간 데이터 기반 비즈니스 인사이트 분석 (2010.12 - 2011.12)</p>
+            </div>
+            <div class="mt-4 md:mt-0 flex gap-4">
+                <div class="glass-card px-6 py-3 text-center">
+                    <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Total Revenue</p>
+                    <p class="text-xl font-bold text-teal-400">$9.75M</p>
+                </div>
+                <div class="glass-card px-6 py-3 text-center">
+                    <p class="text-xs text-slate-400 uppercase tracking-wider mb-1">Total Orders</p>
+                    <p class="text-xl font-bold text-blue-400">25.9K</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+            
+            <!-- Chart 1: Monthly Sales Trend -->
+            <div class="glass-card p-6">
+                <h2 class="text-lg font-semibold mb-4 text-slate-200">월별 매출 트렌드</h2>
+                <div class="chart-container">
+                    <canvas id="monthlySalesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 2: Country Sales -->
+            <div class="glass-card p-6">
+                <h2 class="text-lg font-semibold mb-4 text-slate-200">국가별 매출 비중 (Top 10)</h2>
+                <div class="chart-container">
+                    <canvas id="countrySalesChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 3: Order by Day -->
+            <div class="glass-card p-6">
+                <h2 class="text-lg font-semibold mb-4 text-slate-200">요일별 주문 분포</h2>
+                <div class="chart-container">
+                    <canvas id="dayOrdersChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Chart 4: Top 10 Products -->
+            <div class="glass-card p-6">
+                <h2 class="text-lg font-semibold mb-4 text-slate-200">매출 상위 10개 상품</h2>
+                <div class="chart-container">
+                    <canvas id="topProductsChart"></canvas>
+                </div>
+            </div>
+
+        </div>
+        
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-slate-500 text-sm">
+            &copy; 2026 Advanced Agentic Coding. Built with Tailwind CSS & Chart.js.
+        </footer>
+    </div>
+
+    <!-- Data & Chart Initialization -->
+    <script>
+        // Data generated from Python aggregation
+        const dashboardData = {
+            "monthly_sales": {"labels": ["2010-12", "2011-01", "2011-02", "2011-03", "2011-04", "2011-05", "2011-06", "2011-07", "2011-08", "2011-09", "2011-10", "2011-11", "2011-12"], "data": [748957.02, 560000.26, 498062.65, 683267.08, 493207.121, 723333.51, 691123.12, 681300.111, 682680.51, 1019687.622, 1070704.67, 1461756.25, 433668.01]}, 
+            "country_sales": {"labels": ["United Kingdom", "Netherlands", "EIRE", "Germany", "France", "Australia", "Switzerland", "Spain", "Belgium", "Sweden"], "data": [8187806.364, 284661.54, 263276.82, 221698.21, 197403.9, 137077.27, 56385.35, 54774.58, 40910.96, 36595.91]}, 
+            "day_orders": {"labels": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Sunday"], "data": [4138, 4722, 4815, 5660, 4184, 2381]}, 
+            "top_products": {"labels": ["DOTCOM POSTAGE", "REGENCY CAKESTAND 3 TIER", "WHITE HANGING HEART T-LIGHT", "PARTY BUNTING", "JUMBO BAG RED RETROSPOT", "RABBIT NIGHT LIGHT", "POSTAGE", "PAPER CHAIN KIT 50'S", "ASSORTED COLOUR BIRD", "CHILLI LIGHTS"], "data": [206245.48, 164762.19, 99668.47, 98302.98, 92356.03, 66756.59, 66230.64, 63791.94, 58959.73, 53768.06]}
+        };
+
+        // Common Chart.js options for dark theme
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        const gridOptions = { color: 'rgba(255,255,255,0.05)' };
+
+        // 1. Monthly Sales Chart (Line)
+        new Chart(document.getElementById('monthlySalesChart'), {
+            type: 'line',
+            data: {
+                labels: dashboardData.monthly_sales.labels,
+                datasets: [{
+                    label: 'Total Revenue ($)',
+                    data: dashboardData.monthly_sales.data,
+                    borderColor: '#2dd4bf', // Teal 400
+                    backgroundColor: 'rgba(45, 212, 191, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#0f172a',
+                    pointBorderColor: '#2dd4bf',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: gridOptions, beginAtZero: true }
+                }
+            }
+        });
+
+        // 2. Country Sales Chart (Doughnut)
+        new Chart(document.getElementById('countrySalesChart'), {
+            type: 'doughnut',
+            data: {
+                labels: dashboardData.country_sales.labels,
+                datasets: [{
+                    data: dashboardData.country_sales.data,
+                    backgroundColor: [
+                        '#2dd4bf', '#38bdf8', '#818cf8', '#c084fc', '#f472b6',
+                        '#fbbf24', '#34d399', '#f87171', '#9ca3af', '#e879f9'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'right', labels: { boxWidth: 12, padding: 15 } }
+                }
+            }
+        });
+
+        // 3. Day Orders Chart (Bar)
+        new Chart(document.getElementById('dayOrdersChart'), {
+            type: 'bar',
+            data: {
+                labels: dashboardData.day_orders.labels,
+                datasets: [{
+                    label: 'Number of Orders',
+                    data: dashboardData.day_orders.data,
+                    backgroundColor: '#38bdf8', // Sky 400
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { grid: gridOptions, beginAtZero: true }
+                }
+            }
+        });
+
+        // 4. Top Products Chart (Horizontal Bar)
+        new Chart(document.getElementById('topProductsChart'), {
+            type: 'bar',
+            data: {
+                labels: dashboardData.top_products.labels,
+                datasets: [{
+                    label: 'Revenue ($)',
+                    data: dashboardData.top_products.data,
+                    backgroundColor: 'rgba(129, 140, 248, 0.8)', // Indigo 400
+                    borderColor: '#818cf8',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: gridOptions, beginAtZero: true },
+                    y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
